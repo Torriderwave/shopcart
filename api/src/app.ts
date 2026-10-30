@@ -2,6 +2,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Router, type Express } from 'express';
 import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
 import type { Health } from '@shopcart/contracts';
 import { authRouter } from './modules/auth/auth.routes';
 import { cartRouter } from './modules/cart/cart.routes';
@@ -10,6 +11,7 @@ import { couponsRouter } from './modules/coupons/coupons.routes';
 import { inventoryRouter } from './modules/inventory/inventory.routes';
 import { ordersRouter } from './modules/orders/orders.routes';
 import { reportsRouter } from './modules/reports/reports.routes';
+import { buildOpenApi } from './openapi';
 import { config } from './shared/config';
 import { executeSp } from './shared/db';
 import { errorHandler, notFoundHandler, AppError } from './shared/errors';
@@ -21,6 +23,13 @@ export function createApp(): Express {
   app.disable('x-powered-by');
 
   app.use(httpLogger);
+  // Swagger UI usa scripts en línea: solo /api/docs se sirve sin CSP; el resto conserva helmet completo.
+  const spec = buildOpenApi();
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec, { customSiteTitle: 'ShopCart API' }));
+  app.get('/api/openapi.json', (_req, res) => {
+    res.json(spec);
+  });
+
   app.use(helmet());
   app.use(cors({ origin: config.CORS_ORIGIN, credentials: true }));
   app.use(express.json({ limit: '100kb' }));

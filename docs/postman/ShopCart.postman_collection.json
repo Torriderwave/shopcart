@@ -1,0 +1,2920 @@
+{
+  "info": {
+    "name": "ShopCart API",
+    "description": "Generada desde /api/openapi.json (npm run docs:postman). Flujo sugerido: Autenticación → Login · Cliente; Carrito → Agregar producto; Checkout → Iniciar checkout; Pedidos → Pagar. Los scripts guardan accessToken, cartToken y el total esperado en variables de la colección.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "cartToken",
+      "value": ""
+    },
+    {
+      "key": "idDireccion",
+      "value": "1"
+    },
+    {
+      "key": "idMetodoEnvio",
+      "value": "2"
+    },
+    {
+      "key": "totalEsperado",
+      "value": "0"
+    }
+  ],
+  "item": [
+    {
+      "name": "Sistema",
+      "item": [
+        {
+          "name": "Estado de la API y la base de datos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Público.\n\nEstado de la API y la base de datos",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Registrar cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.success) pm.collectionVariables.set('accessToken', j.data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Público.\n\nRegistrar cliente (fusiona el carrito de invitado si llega X-Cart-Token)",
+            "header": [
+              {
+                "key": "X-Cart-Token",
+                "value": "{{cartToken}}",
+                "disabled": true
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cliente Demo\",\n  \"correo\": \"demo@correo.test\",\n  \"contrasena\": \"ShopCart2026!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Iniciar sesión · Cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.success) pm.collectionVariables.set('accessToken', j.data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Público.\n\nIniciar sesión (access token en el cuerpo, refresh en cookie httpOnly)",
+            "header": [
+              {
+                "key": "X-Cart-Token",
+                "value": "{{cartToken}}",
+                "disabled": true
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"cliente@shopcart.test\",\n  \"contrasena\": \"ShopCart2026!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Iniciar sesión · Operador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.success) pm.collectionVariables.set('accessToken', j.data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Público.\n\nIniciar sesión (access token en el cuerpo, refresh en cookie httpOnly)",
+            "header": [
+              {
+                "key": "X-Cart-Token",
+                "value": "{{cartToken}}",
+                "disabled": true
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"operador@shopcart.test\",\n  \"contrasena\": \"ShopCart2026!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Iniciar sesión · Administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.success) pm.collectionVariables.set('accessToken', j.data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Público.\n\nIniciar sesión (access token en el cuerpo, refresh en cookie httpOnly)",
+            "header": [
+              {
+                "key": "X-Cart-Token",
+                "value": "{{cartToken}}",
+                "disabled": true
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@shopcart.test\",\n  \"contrasena\": \"ShopCart2026!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Renovar el access token con la cookie de refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Público.\n\nRenovar el access token con la cookie de refresh (rotación; el reuso revoca la familia)",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Cerrar sesión y revocar el refresh token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Público.\n\nCerrar sesión y revocar el refresh token",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "Usuario de la sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Requiere sesión (cualquier rol). El SP aplica la propiedad del recurso.\n\nUsuario de la sesión",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Direcciones",
+      "item": [
+        {
+          "name": "Mis direcciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Rol: Cliente.\n\nMis direcciones",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/direcciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "direcciones"]
+            }
+          }
+        },
+        {
+          "name": "Crear dirección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Rol: Cliente.\n\nCrear dirección",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/direcciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "direcciones"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alias\": \"Casa\",\n  \"destinatario\": \"Carla Cliente\",\n  \"linea1\": \"5a avenida 10-20 zona 10\",\n  \"ciudad\": \"Guatemala\",\n  \"departamento\": \"Guatemala\",\n  \"telefono\": \"55551234\",\n  \"esPrincipal\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Actualizar dirección propia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "description": "Rol: Cliente.\n\nActualizar dirección propia",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/direcciones/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "direcciones", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alias\": \"Casa\",\n  \"destinatario\": \"Carla Cliente\",\n  \"linea1\": \"6a avenida 11-21 zona 10\",\n  \"ciudad\": \"Guatemala\",\n  \"departamento\": \"Guatemala\",\n  \"telefono\": \"55551234\",\n  \"esPrincipal\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Eliminar dirección propia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "description": "Rol: Cliente.\n\nEliminar dirección propia",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/direcciones/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "direcciones", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Listar usuarios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Rol: Administrador.\n\nListar usuarios",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "usuarios"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "disabled": false
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "rol",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "activo",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear usuario con rol",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Rol: Administrador.\n\nCrear usuario con rol",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "usuarios"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Nuevo Operador\",\n  \"correo\": \"nuevo.operador@shopcart.test\",\n  \"contrasena\": \"ShopCart2026!\",\n  \"rol\": \"Operador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cambiar nombre, rol o estado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "description": "Rol: Administrador.\n\nCambiar nombre, rol o estado",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/usuarios/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "usuarios", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Nombre actualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catálogo",
+      "item": [
+        {
+          "name": "Listar categorías",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Público; con sesión, un Administrador también ve lo inactivo / el cliente usa su carrito.\n\nListar categorías",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/categorias",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "categorias"],
+              "query": [
+                {
+                  "key": "incluirInactivas",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar productos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Público; con sesión, un Administrador también ve lo inactivo / el cliente usa su carrito.\n\nBuscar productos (texto, categoría, precio, stock, orden, paginación)",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/productos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "productos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "disabled": false
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "idCategoria",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "precioMin",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "precioMax",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "soloDisponibles",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "incluirInactivos",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detalle de producto con variantes e imágenes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Público; con sesión, un Administrador también ve lo inactivo / el cliente usa su carrito.\n\nDetalle de producto con variantes e imágenes",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/productos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "productos", ":id"],
+              "query": [
+                {
+                  "key": "incluirInactivos",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catálogo (admin)",
+      "item": [
+        {
+          "name": "Crear categoría",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Rol: Administrador.\n\nCrear categoría",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/categorias",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "categorias"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Nueva categoría\",\n  \"descripcion\": \"Descripción\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Crear producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Rol: Administrador.\n\nCrear producto",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/productos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "productos"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCategoria\": 1,\n  \"nombre\": \"Producto nuevo\",\n  \"descripcion\": \"Descripción del producto\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Actualizar producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "description": "Rol: Administrador.\n\nActualizar producto",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/productos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "productos", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCategoria\": 1,\n  \"nombre\": \"Producto editado\",\n  \"descripcion\": \"Descripción\",\n  \"activo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Desactivar producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "description": "Rol: Administrador.\n\nDesactivar producto (baja lógica)",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/productos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "productos", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar categoría",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "description": "Rol: Administrador.\n\nActualizar categoría",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/categorias/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "categorias", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Categoría editada\",\n  \"descripcion\": \"Descripción\",\n  \"activo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Desactivar categoría",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "description": "Rol: Administrador.\n\nDesactivar categoría (baja lógica; no si tiene productos activos)",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/categorias/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "categorias", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear variante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Rol: Administrador.\n\nCrear variante (nace con existencia 0)",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/productos/:id/variantes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "productos", ":id", "variantes"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"NUEVO-001\",\n  \"atributos\": {\n    \"Talla\": \"M\",\n    \"Color\": \"Negro\"\n  },\n  \"precio\": 99.9\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Actualizar variante y precio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "description": "Rol: Administrador.\n\nActualizar variante y precio (queda en bitácora)",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/variantes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "variantes", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"NUEVO-001\",\n  \"atributos\": {\n    \"Talla\": \"M\",\n    \"Color\": \"Negro\"\n  },\n  \"precio\": 109.9,\n  \"activo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Desactivar variante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "description": "Rol: Administrador.\n\nDesactivar variante (baja lógica)",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/variantes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "variantes", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Agregar o reemplazar imagen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Rol: Administrador.\n\nAgregar o reemplazar imagen (URL)",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/productos/:id/imagenes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "productos", ":id", "imagenes"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://picsum.photos/seed/demo/600/600\",\n  \"orden\": 0,\n  \"esPrincipal\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Eliminar imagen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "description": "Rol: Administrador.\n\nEliminar imagen",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/imagenes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "imagenes", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventario",
+      "item": [
+        {
+          "name": "Existencias física/reservada/disponible por variante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Roles: Operador, Administrador.\n\nExistencias física/reservada/disponible por variante",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inventory/existencias",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "inventory", "existencias"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "disabled": false
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "idCategoria",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "soloSinStock",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Kardex de una variante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Roles: Operador, Administrador.\n\nKardex de una variante (más reciente primero)",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inventory/variantes/:id/kardex",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "inventory", "variantes", ":id", "kardex"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "disabled": false
+                },
+                {
+                  "key": "tipo",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "desde",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registrar entrada de mercadería",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Roles: Operador, Administrador.\n\nRegistrar entrada de mercadería",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inventory/entradas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "inventory", "entradas"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVariante\": 1,\n  \"cantidad\": 25,\n  \"motivo\": \"Compra a proveedor\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ajuste con motivo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Roles: Operador, Administrador.\n\nAjuste con motivo (delta con signo; no deja negativo)",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inventory/ajustes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "inventory", "ajustes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVariante\": 1,\n  \"cantidad\": -2,\n  \"motivo\": \"Merma por daño\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Carrito",
+      "item": [
+        {
+          "name": "Ver carrito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const c = pm.response.json();",
+                  "if (c.success && c.data.tokenInvitado) pm.collectionVariables.set('cartToken', c.data.tokenInvitado);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Público; con sesión, un Administrador también ve lo inactivo / el cliente usa su carrito.\n\nVer carrito (cliente por JWT; invitado por X-Cart-Token)",
+            "header": [
+              {
+                "key": "X-Cart-Token",
+                "value": "{{cartToken}}",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart"]
+            }
+          }
+        },
+        {
+          "name": "Agregar producto; sin token crea un carrito de invitado y devuelve tokenInvitado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const c = pm.response.json();",
+                  "if (c.success && c.data.tokenInvitado) pm.collectionVariables.set('cartToken', c.data.tokenInvitado);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Público; con sesión, un Administrador también ve lo inactivo / el cliente usa su carrito.\n\nAgregar producto; sin token crea un carrito de invitado y devuelve tokenInvitado",
+            "header": [
+              {
+                "key": "X-Cart-Token",
+                "value": "{{cartToken}}",
+                "disabled": true
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "items"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVariante\": 1,\n  \"cantidad\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cambiar cantidad de una línea",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "description": "Público; con sesión, un Administrador también ve lo inactivo / el cliente usa su carrito.\n\nCambiar cantidad de una línea",
+            "header": [
+              {
+                "key": "X-Cart-Token",
+                "value": "{{cartToken}}",
+                "disabled": true
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/items/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "items", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cantidad\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Quitar una línea",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "description": "Público; con sesión, un Administrador también ve lo inactivo / el cliente usa su carrito.\n\nQuitar una línea",
+            "header": [
+              {
+                "key": "X-Cart-Token",
+                "value": "{{cartToken}}",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/items/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "items", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Aplicar cupón",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Público; con sesión, un Administrador también ve lo inactivo / el cliente usa su carrito.\n\nAplicar cupón",
+            "header": [
+              {
+                "key": "X-Cart-Token",
+                "value": "{{cartToken}}",
+                "disabled": true
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/coupon",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "coupon"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"BIENVENIDA10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Quitar cupón",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "description": "Público; con sesión, un Administrador también ve lo inactivo / el cliente usa su carrito.\n\nQuitar cupón",
+            "header": [
+              {
+                "key": "X-Cart-Token",
+                "value": "{{cartToken}}",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/coupon",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "coupon"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkout",
+      "item": [
+        {
+          "name": "Métodos de envío",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Público.\n\nMétodos de envío",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shipping-methods",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "shipping-methods"]
+            }
+          }
+        },
+        {
+          "name": "Iniciar checkout: reserva existencias 15 min y congela precios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const k = pm.response.json();",
+                  "if (k.success) {",
+                  "  const o = k.data.opcionesEnvio.find(function (x) { return x.aplica; });",
+                  "  if (o) { pm.collectionVariables.set('idMetodoEnvio', o.idMetodoEnvio); pm.collectionVariables.set('totalEsperado', o.total); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Rol: Cliente.\n\nIniciar checkout: reserva existencias 15 min y congela precios (reiniciar es idempotente)",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "checkout"]
+            }
+          }
+        },
+        {
+          "name": "Estado del checkout en curso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const k = pm.response.json();",
+                  "if (k.success) {",
+                  "  const o = k.data.opcionesEnvio.find(function (x) { return x.aplica; });",
+                  "  if (o) { pm.collectionVariables.set('idMetodoEnvio', o.idMetodoEnvio); pm.collectionVariables.set('totalEsperado', o.total); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Rol: Cliente.\n\nEstado del checkout en curso",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "checkout"]
+            }
+          }
+        },
+        {
+          "name": "Cancelar checkout y liberar reservas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "description": "Rol: Cliente.\n\nCancelar checkout y liberar reservas",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "checkout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pedidos",
+      "item": [
+        {
+          "name": "Pagar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Rol: Cliente.\n\nPagar (simulado): crea el pedido de forma atómica e idempotente (200 si repite la llave)",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idDireccion\": \"{{idDireccion}}\",\n  \"idMetodoEnvio\": 2,\n  \"totalEsperado\": \"{{totalEsperado}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Mis pedidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Rol: Cliente.\n\nMis pedidos (filtros, orden, paginación)",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/mine",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", "mine"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "disabled": false
+                },
+                {
+                  "key": "estado",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "desde",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "numero",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detalle con líneas, historial, devoluciones y acciones permitidas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Requiere sesión (cualquier rol). El SP aplica la propiedad del recurso.\n\nDetalle con líneas, historial, devoluciones y acciones permitidas (el cliente solo ve los suyos)",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancelar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Requiere sesión (cualquier rol). El SP aplica la propiedad del recurso.\n\nCancelar (Pagado/Preparando): reintegra existencias. Cliente solo el suyo",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/:id/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":id", "cancel"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Me arrepentí de la compra\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pedidos (operación)",
+      "item": [
+        {
+          "name": "Todos los pedidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Roles: Operador, Administrador.\n\nTodos los pedidos (filtros por estado, cliente, número y fechas)",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "disabled": false
+                },
+                {
+                  "key": "estado",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "desde",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "numero",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "cliente",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Avanzar estado: Pagado→Preparando→Despachado→Entregado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "description": "Roles: Operador, Administrador.\n\nAvanzar estado: Pagado→Preparando→Despachado→Entregado",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"Preparando\",\n  \"nota\": \"En bodega\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Devolución total o parcial por línea",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Roles: Operador, Administrador.\n\nDevolución total o parcial por línea (pedido Entregado o DevueltoParcial)",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/:id/returns",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":id", "returns"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Producto defectuoso\",\n  \"lineas\": [\n    {\n      \"idPedidoLinea\": 1,\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cupones",
+      "item": [
+        {
+          "name": "Listar cupones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Rol: Administrador.\n\nListar cupones",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/coupons",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "coupons"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "disabled": false
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "activo",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "vigente",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear cupón",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Rol: Administrador.\n\nCrear cupón",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/coupons",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "coupons"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"PROMO20\",\n  \"tipo\": \"Porcentaje\",\n  \"valor\": 20,\n  \"montoMinimo\": 0,\n  \"usosTotalesMax\": 100,\n  \"usosPorCliente\": 1,\n  \"idCategoria\": null,\n  \"vigenteDesde\": \"2026-10-01T00:00:00Z\",\n  \"vigenteHasta\": \"2026-12-31T23:59:59Z\",\n  \"activo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Actualizar cupón",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "description": "Rol: Administrador.\n\nActualizar cupón",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/coupons/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "coupons", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"PROMO20\",\n  \"tipo\": \"Porcentaje\",\n  \"valor\": 25,\n  \"montoMinimo\": 0,\n  \"usosTotalesMax\": 100,\n  \"usosPorCliente\": 1,\n  \"idCategoria\": null,\n  \"vigenteDesde\": \"2026-10-01T00:00:00Z\",\n  \"vigenteHasta\": \"2026-12-31T23:59:59Z\",\n  \"activo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Desactivar cupón",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "description": "Rol: Administrador.\n\nDesactivar cupón",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/coupons/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "coupons", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reportes",
+      "item": [
+        {
+          "name": "KPIs: ventas netas, pedidos, ticket promedio, unidades, devuelto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Rol: Administrador.\n\nKPIs: ventas netas, pedidos, ticket promedio, unidades, devuelto",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/kpis",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reports", "kpis"],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ventas por día/semana/mes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Rol: Administrador.\n\nVentas por día/semana/mes (períodos vacíos en 0)",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/ventas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reports", "ventas"],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "agrupacion",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ventas por categoría",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Rol: Administrador.\n\nVentas por categoría",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/ventas-categoria",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reports", "ventas-categoria"],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Productos más vendidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Rol: Administrador.\n\nProductos más vendidos",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/top-productos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reports", "top-productos"],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limite",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Carritos abandonados",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Rol: Administrador.\n\nCarritos abandonados (clientes e invitados)",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/carritos-abandonados",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reports", "carritos-abandonados"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "disabled": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bitácora",
+      "item": [
+        {
+          "name": "Bitácora inmutable con valor anterior y nuevo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta con envelope', function () {",
+                  "  if (pm.response.code === 204) return;",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('success');",
+                  "  if (j.success) pm.expect(j).to.have.property('data'); else pm.expect(j.error).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Rol: Administrador.\n\nBitácora inmutable con valor anterior y nuevo",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "audit"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "disabled": false
+                },
+                {
+                  "key": "modulo",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "entidad",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "idUsuario",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "accion",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "desde",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
