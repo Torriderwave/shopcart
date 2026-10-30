@@ -1,0 +1,31 @@
+{
+  "name": "shopcart",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "contracts",
+    "db",
+    "api"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w api",
+    "db:setup": "node db/run.mjs --reset",
+    "db:migrate": "node db/run.mjs",
+    "test": "npm run db:setup && npm test -w api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-boundaries": "^7.4.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}
