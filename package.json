@@ -17,7 +17,8 @@
     "test": "npm run db:setup && npm test -w api",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint . && prettier --check .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "docs:postman": "npm run docs:postman -w api"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
