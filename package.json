@@ -19,7 +19,7 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "docs:postman": "npm run docs:postman -w api",
-    "test:fresh": "npm run db:setup && npm test"
+    "docs:erd": "node db/erd.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

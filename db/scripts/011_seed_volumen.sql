@@ -357,5 +357,11 @@ DECLARE @D2 INT = (SELECT IDProducto FROM dbo.Productos WHERE Nombre = N'Cuerda 
 EXEC dbo.SP_Catalogo_DesactivarProducto @Admin, @D1;
 EXEC dbo.SP_Catalogo_DesactivarProducto @Admin, @D2;
 
+-- Usuarios del equipo y un cliente desactivado (conserva su historial: «desactivarse sin borrarse», RF-01).
+DECLARE @HashEquipo NVARCHAR(255) = (SELECT HashContrasena FROM dbo.Usuarios WHERE Correo = N'operador@shopcart.test');
+EXEC dbo.SP_Auth_CrearUsuario @Admin, N'operador2@shopcart.test', @HashEquipo, N'Olga Operadora', N'Operador';
+DECLARE @Baja INT = (SELECT IDUsuario FROM dbo.Usuarios WHERE Correo = N'hector.tzoc@correo.test');
+EXEC dbo.SP_Auth_ActualizarUsuario @Admin, @Baja, NULL, NULL, 0;
+
 DROP TABLE #Clientes; DROP TABLE #Orderable;
 GO
