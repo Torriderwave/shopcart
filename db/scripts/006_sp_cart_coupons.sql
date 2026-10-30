@@ -94,6 +94,7 @@ BEGIN
 
     SELECT c.IDCarrito, c.TokenInvitado,
            t.Subtotal, t.Descuento, t.Total,
+           CAST(t.Total - ROUND(t.Total / 1.12, 2) AS DECIMAL(18, 2)) AS Iva,   -- IVA 12 % incluido en el total
            t.CuponCodigo, t.CuponValido, t.CuponMotivo, t.CuponMensaje,
            ISNULL((SELECT SUM(cl.Cantidad) FROM dbo.CarritoLineas AS cl WHERE cl.IDCarrito = c.IDCarrito), 0)
                AS CantidadItems,

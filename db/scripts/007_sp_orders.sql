@@ -49,7 +49,8 @@ BEGIN
 
     SELECT m.IDMetodoEnvio, m.Nombre, m.DiasEstimados, m.Costo,
            CAST(CASE WHEN m.MontoMinimo IS NULL OR t.Subtotal - t.Descuento >= m.MontoMinimo THEN 1 ELSE 0 END AS BIT) AS Aplica,
-           CAST(t.Total + m.Costo AS DECIMAL(18, 2)) AS Total
+           CAST(t.Total + m.Costo AS DECIMAL(18, 2)) AS Total,
+           CAST((t.Total + m.Costo) - ROUND((t.Total + m.Costo) / 1.12, 2) AS DECIMAL(18, 2)) AS Iva
     FROM dbo.MetodosEnvio AS m
     CROSS APPLY dbo.FU_Carrito_CalcularTotales(@IDCarrito) AS t
     WHERE m.Activo = 1
@@ -158,6 +159,7 @@ BEGIN
            p.DirDestinatario, p.DirLinea1, p.DirLinea2, p.DirCiudad, p.DirDepartamento, p.DirCodigoPostal, p.DirTelefono,
            p.MetodoEnvioNombre, p.CuponCodigo,
            p.Subtotal, p.Descuento, p.CostoEnvio, p.Total,
+           CAST(p.Total - ROUND(p.Total / 1.12, 2) AS DECIMAL(18, 2)) AS Iva,   -- IVA 12 % incluido en el total
            ISNULL((SELECT SUM(d.MontoTotal) FROM dbo.Devoluciones AS d WHERE d.IDPedido = p.IDPedido), 0) AS MontoDevuelto,
            (SELECT SUM(pl.Cantidad) FROM dbo.PedidoLineas AS pl WHERE pl.IDPedido = p.IDPedido) AS CantidadItems,
            @Reutilizado AS Reutilizado

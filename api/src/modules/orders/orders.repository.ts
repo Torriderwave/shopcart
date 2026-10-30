@@ -85,6 +85,7 @@ function toDetalle(rs: Row[][]): PedidoDetalle {
     descuento: Number(h.descuento),
     costoEnvio: Number(h.costoEnvio),
     total: Number(h.total),
+    iva: Number(h.iva),
     montoDevuelto: Number(h.montoDevuelto),
     cantidadItems: Number(h.cantidadItems ?? 0),
     reutilizado: Boolean(h.reutilizado),
@@ -142,6 +143,7 @@ function toCheckout(r: SpResult): Checkout {
       costo: Number(o.costo),
       aplica: Boolean(o.aplica),
       total: Number(o.total),
+      iva: Number(o.iva),
     })),
   };
 }

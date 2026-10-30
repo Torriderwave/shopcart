@@ -26,6 +26,8 @@ export const CarritoSchema = z.object({
   subtotal: z.number(),
   descuento: z.number(),
   total: z.number(),
+  /** IVA (12 %) ya incluido en `total`; solo informativo. */
+  iva: z.number(),
   cuponCodigo: z.string().nullable(),
   cuponValido: z.boolean().nullable(),
   cuponMotivo: z.string().nullable(),

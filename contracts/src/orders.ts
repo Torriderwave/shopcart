@@ -28,6 +28,7 @@ export const MetodoEnvioOpcionSchema = z.object({
   costo: z.number(),
   aplica: z.boolean(),
   total: z.number(),
+  iva: z.number(),
 });
 export type MetodoEnvioOpcion = z.infer<typeof MetodoEnvioOpcionSchema>;
 
@@ -134,6 +135,8 @@ export const PedidoDetalleSchema = z.object({
   descuento: z.number(),
   costoEnvio: z.number(),
   total: z.number(),
+  /** IVA (12 %) ya incluido en `total`; solo informativo. */
+  iva: z.number(),
   montoDevuelto: z.number(),
   cantidadItems: z.number().int(),
   /** true si la respuesta es de una repetición con la misma Idempotency-Key. */

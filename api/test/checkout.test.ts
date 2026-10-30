@@ -83,7 +83,7 @@ describe('carrito de invitado y fusión', () => {
   });
 });
 
-describe('compra completa (RF-05, RF-06)', () => {
+describe('carrito y compra completa (RF-04, RF-06)', () => {
   it('reserva, paga, descuenta stock y deja el pedido en Pagado con totales al centavo', async () => {
     const v = await nuevaVariante(admin, operador, 33.33, 10);
     const c = await nuevoComprador();
@@ -94,6 +94,10 @@ describe('compra completa (RF-05, RF-06)', () => {
     expect(res.status).toBe(201);
     expect(res.body.data).toMatchObject({ estadoCodigo: 'Pagado', subtotal: 99.99, total });
     expect(res.body.data.numeroPedido).toMatch(/^SC-\d{8}-\d{6}$/);
+    // IVA 12 % incluido: el desglose informativo cuadra con el total al centavo.
+    expect(Math.round(res.body.data.iva * 100)).toBe(
+      Math.round(total * 100) - Math.round((total / 1.12) * 100),
+    );
     expect(await existencia(v.idVariante)).toEqual({ f: 7, r: 0 });
 
     // El carrito se cerró: el siguiente GET es uno vacío nuevo.
@@ -200,7 +204,7 @@ describe('compra completa (RF-05, RF-06)', () => {
   });
 });
 
-describe('cupones (RF-04)', () => {
+describe('cupones (RF-05)', () => {
   it('solo el administrador gestiona cupones', async () => {
     const cl = await nuevoComprador();
     expect((await api().get('/api/v1/coupons').set(bearer(cl.token))).status).toBe(403);
