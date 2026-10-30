@@ -9,6 +9,7 @@ import { catalogRouter } from './modules/catalog/catalog.routes';
 import { couponsRouter } from './modules/coupons/coupons.routes';
 import { inventoryRouter } from './modules/inventory/inventory.routes';
 import { ordersRouter } from './modules/orders/orders.routes';
+import { reportsRouter } from './modules/reports/reports.routes';
 import { config } from './shared/config';
 import { executeSp } from './shared/db';
 import { errorHandler, notFoundHandler, AppError } from './shared/errors';
@@ -42,7 +43,7 @@ export function createApp(): Express {
   api.use(cartRouter);
   api.use(couponsRouter);
   api.use(ordersRouter);
-  // Pendiente de montar: reports.
+  api.use(reportsRouter);
 
   app.use('/api/v1', api);
   app.use(notFoundHandler);
