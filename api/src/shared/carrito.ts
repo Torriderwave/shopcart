@@ -35,6 +35,7 @@ export function toCarrito(rs: Row[][], offset = 0): Carrito {
     subtotal: Number(h.subtotal),
     descuento: Number(h.descuento),
     total: Number(h.total),
+    iva: Number(h.iva),
     cuponCodigo: (h.cuponCodigo as string | null) ?? null,
     cuponValido:
       h.cuponValido === null || h.cuponValido === undefined ? null : Boolean(h.cuponValido),
@@ -52,6 +53,7 @@ export const carritoVacio = (): Carrito => ({
   subtotal: 0,
   descuento: 0,
   total: 0,
+  iva: 0,
   cuponCodigo: null,
   cuponValido: null,
   cuponMotivo: null,

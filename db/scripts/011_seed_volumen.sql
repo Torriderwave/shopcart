@@ -209,15 +209,15 @@ DECLARE @Cupones TABLE (N INT, Codigo NVARCHAR(30));
 INSERT INTO @Cupones VALUES (0,N'BIENVENIDA10'),(1,N'VERANO15'),(2,N'ENVIO50'),(3,N'TECH100'),(4,N'FLASH20'),(5,N'AGOTADO10');
 
 DECLARE @Total INT = 420, @i INT = 1, @Hechos INT = 0, @Omitidos INT = 0;
-DECLARE @Span FLOAT = 175.5 * 1440, @Inicio DATETIME2(3) = DATEADD(DAY, -176, @Ahora);
+DECLARE @Span DECIMAL(18, 2) = 175.5 * 1440, @Inicio DATETIME2(3) = DATEADD(DAY, -176, @Ahora);
 DECLARE @T0 DATETIME2(3), @U INT, @Dir INT, @C INT, @P INT, @Env INT, @Monto DECIMAL(18, 2), @Key UNIQUEIDENTIFIER;
-DECLARE @k INT, @NL INT, @V INT, @Q INT, @Cod NVARCHAR(30), @Edad FLOAT, @Fate INT, @LineaId INT, @Json NVARCHAR(MAX);
+DECLARE @k INT, @NL INT, @V INT, @Q INT, @Cod NVARCHAR(30), @Fate INT, @LineaId INT, @Json NVARCHAR(MAX);
 DECLARE @Cnt INT, @Paso INT, @Ult DATETIME2(3);
 
 WHILE @i <= @Total
 BEGIN
     BEGIN TRY
-        SET @T0 = DATEADD(MINUTE, CAST(FLOOR(@Span * POWER(CAST(@i AS FLOAT) / @Total, 0.8)) AS INT), @Inicio);
+        SET @T0 = DATEADD(MINUTE, CAST(FLOOR(@Span * POWER(CAST(@i AS DECIMAL(18, 6)) / @Total, 0.8)) AS INT), @Inicio);
         SELECT @U = IDUsuario, @Dir = IDDireccion FROM #Clientes WHERE N = ((@i * 7 + @i / 5) % @NC) + 1;
 
         EXEC dbo.SP_Carrito_ObtenerOCrearPorUsuario @U, 1;
@@ -255,8 +255,7 @@ BEGIN
         EXEC dbo.SP_Pedidos_CrearPedido @U, @Dir, @Env, @Monto, @Key;
         SET @P = (SELECT IDPedido FROM dbo.Pedidos WHERE IDUsuario = @U AND LlaveIdempotencia = @Key);
 
-        -- Ciclo de vida según la antigüedad del pedido
-        SET @Edad = DATEDIFF(MINUTE, @T0, @Ahora) / 1440.0;
+        -- Ciclo de vida: por posición (los más recientes quedan pendientes) y por «destino» (@i % 20)
         SET @Fate = @i % 20;
         IF @Fate IN (14, 15)
             EXEC dbo.SP_Pedidos_Cancelar @U, @P, N'Cambié de opinión sobre la compra';
