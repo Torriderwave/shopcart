@@ -1,13 +1,33 @@
-# ShopCart — Arquitectura v4.1
+# ShopCart — Arquitectura v4.2
 
 **Reto:** Tech Challenge 360 · Grupo Pentandra · Full Stack Middle/Senior  
-**Versión:** 4.1 · 29 oct 2026 (America/Guatemala, UTC-6) — v4 contrastada línea por línea contra el enunciado oficial.  
-**Alcance:** diseño previo a código. Sin implementación.  
+**Versión:** 4.2 · 30 oct 2026 (America/Guatemala, UTC-6) — v4.1 sincronizada con la implementación de la Fase 1 (ver §0, «v4.1 → v4.2»).  
+**Alcance:** diseño de referencia. La Fase 1 (BD y API) está implementada y probada; el frontend (Fase 2) sigue pendiente. Si algo difiere entre este documento y el código, **manda el código** y la diferencia está listada abajo.  
 **Fuente de verdad:** *Tech Challenge 360 - Reto ShopCart - Enunciado.pdf* (15 págs.). Las citas `«…»` son textuales del enunciado.
 
 ---
 
 ## 0. Cambios
+
+### v4.1 → v4.2 (desviaciones de la implementación)
+
+| # | Diseño v4.1 | Implementación | Motivo |
+|---|-------------|----------------|--------|
+| I1 | SPs reciben `@IDUsuarioSesion` **y** `@RolSesion` desde el JWT | Reciben solo `@IDUsuarioSesion`; el rol se consulta en la BD con `SP_Auth_ExigirRol(@IDUsuarioSesion, @Roles)` | El rol del JWT puede estar desactualizado hasta 15 min; la BD es la autoridad y un SP llamado directo tampoco acepta un rol inventado |
+| I2 | `SP_Bitacora_Registrar` en `008` | Está en `004` (los SPs de auth/catálogo la usan antes) | Orden de dependencias entre scripts |
+| I3 | `FechaLocal = … AT TIME ZONE 'Central America Standard Time'` | `DATEADD(HOUR, -6, FechaCreacion)` (Guatemala no usa horario de verano); los filtros convierten con `DATEADD(HOUR, 6, …)` | Independiente de la configuración de zonas horarias del servidor y del contenedor; más simple y verificable |
+| I4 | `GET /checkout` sin checkout iniciado → 404 | **409 `CHECKOUT_NO_INICIADO`** (50011); sin carrito → 400 `CARRITO_VACIO` | Es un estado de la compra, no un recurso inexistente; el FE decide iniciar el checkout |
+| I5 | Errores de stock con `details` (variante, disponible) | Sin `details`; el mensaje es claro y estable | Los SPs lanzan `THROW` con mensaje; no se simula un cuerpo estructurado |
+| I6 | Internos `SP_Inventario_AplicarMovimiento`, `ExpirarReservas`, `ReintegrarExistencia` sin detallar | Requieren `@@TRANCOUNT > 0` (`THROW 50098` si no) y no abren transacción propia | Garantiza que el kardex y la reserva se confirman o revierten junto con quien los llama |
+| I7 | Seed: 8 categorías, 1 admin + 2 operadores + 30 clientes (1 desactivado) | 6 categorías, 40 productos (2 descontinuados), 119 variantes, 1 admin + 2 operadores + 32 clientes (1 desactivado), 8 cupones, 420 pedidos, 15 carritos abandonados | Volumen suficiente para dashboard y rendimiento; ver `011_seed_volumen.sql` |
+| I8 | Seed completo en `010_seed.sql` | `010` = datos fijos + usuarios de prueba; `011_seed_volumen.sql` = catálogo, stock, clientes, cupones y pedidos históricos generados con los SPs reales | Separa lo imprescindible de lo demostrativo |
+| I9 | El seed retrofechaba también la bitácora | **No se toca la bitácora** (sus entradas llevan la fecha real de carga) | La inmutabilidad vale también para el seed: no se deshabilitan triggers |
+| I10 | Desglose de IVA solo en §5 | Implementado: `iva` en carrito, opciones de envío y pedido (`Total − ROUND(Total/1.12, 2)`) | Contexto del enunciado: precios con IVA incluido |
+| I11 | `SP_Reportes_*` (5) + `SP_Bitacora_Listar` | Se agrega el auxiliar `SP_Reportes_ResolverRango` (valida fechas, rango por defecto de 30 días, máximo 2 años) | Una sola regla de rango para los 4 reportes |
+| I12 | Contratos de cart/coupons/orders/reports «por definir» | Implementados en `contracts/src/{cart,coupons,orders,reports}.ts`; `TRANSICIONES` vive en `orders.ts` | Fuente única para API y web |
+| I13 | OpenAPI «generado» (sin herramienta fijada) | `api/src/openapi.ts` (z.toJSONSchema) + `swagger-ui-express`; una prueba compara las rutas de Express con las documentadas | Cero deriva entre código y documentación |
+| I14 | Carrito: columnas por definir | Cada línea expone `disponible` y `problema` (`INACTIVA`, `SIN_STOCK`, `EXCEDE_DISPONIBLE`); el carrito expone `reservaExpiraEn` | El FE puede mostrar el estado sin llamadas adicionales |
+| I15 | Pruebas T-05…T-14 en el plan | Implementadas como 110 pruebas de integración (ver README §7); T-11 incluye la venta de las 23:00 locales | Evidencia ejecutable de los criterios de aceptación |
 
 ### v4 → v4.1 (contraste con el enunciado)
 
@@ -115,7 +135,7 @@ Cada RF mapea a objetos concretos. Si no aparece aquí, no se construye.
 
 | Criterio | Mecanismo | Test (§11) |
 |----------|-----------|------------|
-| Ownership (RF-01) | `@IDUsuarioSesion` + `@RolSesion` desde JWT; `THROW 50043` → 403 | T-07 |
+| Ownership (RF-01) | `@IDUsuarioSesion` desde el JWT; el rol se consulta en la BD (`SP_Auth_ExigirRol`); `THROW 50043` → 403 | T-07 |
 | Precio no altera pedidos hechos (RF-02) | Congelado en `PedidoLineas` | T-08 |
 | Se respeta el precio que el cliente vio (Contexto) | Precio congelado en `InventarioReservas` al iniciar checkout | T-08 |
 | Total del carrito sin errores de redondeo (RF-04) | `DECIMAL(18,2)` + `ROUND` en BD; FE no calcula | T-14 |
@@ -175,7 +195,8 @@ shopcart/
 │       ├── 007_sp_orders.sql     # envío + checkout + pedidos + devoluciones
 │       ├── 008_sp_reports_audit.sql
 │       ├── 009_triggers.sql
-│       └── 010_seed.sql          # catálogos fijos + usuarios + productos + stock + historial de ventas (§3.4)
+│       ├── 010_seed.sql          # catálogos fijos + usuarios de prueba
+│       └── 011_seed_volumen.sql  # catálogo, stock, clientes, cupones y 420 pedidos históricos por los SPs reales (§3.4)
 ├── api/
 │   ├── package.json
 │   ├── tsconfig.json
@@ -252,7 +273,7 @@ npm run dev                     # API :3000 + web :5173 (concurrently)
 
 Scripts raíz: `dev`, `db:setup` (`--reset`), `db:migrate` (solo pendientes), `test` (resetea BD y corre vitest), `lint` (ESLint + boundaries + Prettier check), `typecheck`.
 
-### 3.4 Datos semilla (`010_seed.sql`)
+### 3.4 Datos semilla (`010_seed.sql` + `011_seed_volumen.sql`)
 
 El seed debe permitir demostrar **todos** los RF en la defensa y medir el RNF de 1 s.
 
@@ -338,7 +359,7 @@ Esta sección es la que evita sorpresas al integrar el FE. Todo lo aquí definid
 - BD: `DATETIME2(3)` en **UTC** (`SYSUTCDATETIME()`).
 - API: ISO 8601 con `Z` (`2026-10-29T18:00:00.000Z`). FE convierte a `America/Guatemala` al mostrar (`lib/format.ts`).
 - Filtros de rango del FE (`desde`, `hasta`): `YYYY-MM-DD` **en hora Guatemala**, ambos inclusivos. El SP convierte a rango UTC `[desde 06:00Z, hasta+1 06:00Z)`.
-- Agrupaciones de reportes (día/semana/mes) se hacen sobre la fecha local, que `VW_Dashboard_LineasNetas` expone como columna `FechaLocal = CAST(FechaCreacion AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)`. Semana ISO (inicia lunes), independiente de `DATEFIRST`.
+- Agrupaciones de reportes (día/semana/mes) se hacen sobre la fecha local, que `VW_Dashboard_LineasNetas` expone como columna `FechaLocal = CAST(DATEADD(HOUR, -6, FechaCreacion) AS DATE)`. Semana ISO (inicia lunes), independiente de `DATEFIRST`.
 
 ### 5.5 Dinero
 
@@ -566,10 +587,10 @@ Los seis objetos que el enunciado da como ejemplo existen con estos nombres exac
 `SP_Cupones_Crear` · `SP_Cupones_Actualizar` · `SP_Cupones_Desactivar` · `SP_Cupones_Listar` · `SP_Cupones_ValidarParaCarrito` (i)
 
 **`007` — envío, checkout, pedidos, devoluciones (11)**  
-`SP_MetodosEnvio_Listar` · `SP_Pedidos_IniciarCheckout` · `SP_Pedidos_ObtenerCheckout` (solo lectura: reserva activa, totales, opciones de envío) · `SP_Pedidos_CancelarCheckout` · `SP_Pedidos_CrearPedido` · `SP_Pedidos_ObtenerPorId` (recordsets: cabecera, líneas con `CantidadDevuelta`, historial desde `VW_Pedidos_Historial`, devoluciones, acciones permitidas para `@RolSesion`) · `SP_Pedidos_ListarPorUsuario` · `SP_Pedidos_ListarAdmin` (filtros: estado, desde/hasta, número, cliente; sirve a operador y a RF-08) · `SP_Pedidos_CambiarEstado` · `SP_Pedidos_Cancelar` · `SP_Pedidos_CrearDevolucion`
+`SP_MetodosEnvio_Listar` · `SP_Pedidos_IniciarCheckout` · `SP_Pedidos_ObtenerCheckout` (solo lectura: reserva activa, totales, opciones de envío) · `SP_Pedidos_CancelarCheckout` · `SP_Pedidos_CrearPedido` · `SP_Pedidos_ObtenerPorId` (recordsets: cabecera, líneas con `CantidadDevuelta`, historial desde `VW_Pedidos_Historial`, devoluciones, acciones permitidas según el rol consultado en la BD) · `SP_Pedidos_ListarPorUsuario` · `SP_Pedidos_ListarAdmin` (filtros: estado, desde/hasta, número, cliente; sirve a operador y a RF-08) · `SP_Pedidos_CambiarEstado` · `SP_Pedidos_Cancelar` · `SP_Pedidos_CrearDevolucion`
 
 **`008` — reportes (5) + bitácora (2)**  
-`SP_Reportes_Kpis` · `SP_Reportes_VentasPorPeriodo` · `SP_Reportes_VentasPorCategoria` · `SP_Reportes_TopProductos` · `SP_Reportes_CarritosAbandonados` · `SP_Bitacora_Registrar` (i) · `SP_Bitacora_Listar`
+`SP_Reportes_Kpis` · `SP_Reportes_VentasPorPeriodo` · `SP_Reportes_VentasPorCategoria` · `SP_Reportes_TopProductos` · `SP_Reportes_CarritosAbandonados` · `SP_Reportes_ResolverRango` (i) · `SP_Bitacora_Listar`
 
 **`009` — triggers (2)**  
 `TR_Bitacora_NoUpdate` · `TR_Bitacora_NoDelete` (`INSTEAD OF`, hacen `THROW`)
@@ -582,7 +603,7 @@ Los seis objetos que el enunciado da como ejemplo existen con estos nombres exac
 
 ```sql
 CREATE OR ALTER PROCEDURE dbo.SP_Modulo_Proceso
-  @IDUsuarioSesion INT, @RolSesion NVARCHAR(20), /* params tipados */
+  @IDUsuarioSesion INT, /* params tipados; el rol se consulta en BD con SP_Auth_ExigirRol */
 AS
 BEGIN
   SET NOCOUNT ON; SET XACT_ABORT ON;
@@ -603,7 +624,7 @@ END
 
 - SPs de lectura: sin transacción. SPs internos (i): sin `BEGIN TRAN`, sin `TRY/CATCH`, `THROW` directo.
 - Todo SP mutante devuelve el recurso resultante → la API responde sin una segunda llamada.
-- Todo SP que actúa en nombre de alguien recibe `@IDUsuarioSesion` (y `@RolSesion` si el resultado depende del rol).
+- Todo SP que actúa en nombre de alguien recibe `@IDUsuarioSesion`; si el resultado depende del rol, el SP lo consulta en la BD (`SP_Auth_ExigirRol` devuelve el rol por `OUTPUT`).
 
 ### 7.3 Seguridad de BD
 
@@ -742,7 +763,7 @@ Siempre dentro de la misma transacción del cambio (si el cambio hace rollback, 
 ### 8.7 Ownership
 
 - Recursos de cliente (carrito, direcciones, pedidos): el SP filtra por `@IDUsuarioSesion`; recurso de otro → `50043` (403). Inexistente → `50044` (404).
-- Operador/Administrador acceden a cualquier pedido; el SP decide con `@RolSesion`.
+- Operador/Administrador acceden a cualquier pedido; el SP decide con el rol que consulta en la BD.
 
 ---
 
@@ -999,8 +1020,8 @@ El enunciado (§06) dice: «deja abiertas algunas decisiones a propósito. El pa
 
 | # | Tema | Recomendación | ¿Bloquea código? |
 |---|------|---------------|------------------|
-| **A** | Aprobar esta v4.1 como base | Sí, tras revisar §0 | Sí |
-| **C** | Cuenta de GitHub del repo | La personal de Pablo (evaluador necesita acceso) | No (solo el primer push) |
+| **A** | Aprobar esta v4.1 como base | **Resuelto:** aprobada y construida; las diferencias están en §0 «v4.1 → v4.2» | — |
+| **C** | Cuenta de GitHub del repo | **Resuelto:** repositorio privado en la cuenta personal; falta dar acceso al evaluador cuando se conozca su usuario | No |
 | **D** | Herramienta / LLM para programar | La que elija Pablo | No |
 | **Q** | (Opcional) Enviar por escrito al evaluador la duda de «pedido completado» (decisión 2) | Si responde distinto, solo cambia `CuentaComoVenta` en el seed | No |
 
@@ -1056,4 +1077,4 @@ Commits pequeños y progresivos. Sin secretos en el repo.
 
 ---
 
-*ShopCart arquitectura v4.1 · 29 oct 2026 (America/Guatemala). Contrastada contra el enunciado oficial; cobertura RF-01…09 y RNF; contrato API↔FE cerrado antes de codificar.*
+*ShopCart arquitectura v4.2 · 30 oct 2026 (America/Guatemala). Contrastada contra el enunciado oficial; Fase 1 implementada y probada (110 pruebas); contrato API↔FE cerrado.*
