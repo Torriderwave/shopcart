@@ -1,0 +1,9 @@
+{
+  "name": "@shopcart/db",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "mssql": "^11.0.0"
+  }
+}
