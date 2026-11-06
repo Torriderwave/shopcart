@@ -25,7 +25,16 @@ import {
   setRefreshCookie,
 } from '../../shared/auth';
 import { AppError } from '../../shared/errors';
-import { authRateLimit, cartToken, noContent, ok, paged, valid, validate } from '../../shared/http';
+import {
+  authRateLimit,
+  cartToken,
+  noContent,
+  ok,
+  paged,
+  refreshRateLimit,
+  valid,
+  validate,
+} from '../../shared/http';
 import * as service from './auth.service';
 
 export const authRouter = Router();
@@ -59,7 +68,7 @@ authRouter.post(
   },
 );
 
-authRouter.post('/auth/refresh', authRateLimit, async (req, res) => {
+authRouter.post('/auth/refresh', refreshRateLimit, async (req, res) => {
   const token = readRefreshCookie(req);
   if (!token) throw new AppError('REFRESH_INVALIDO', 401, 'No hay sesión que renovar.');
   try {

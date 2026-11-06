@@ -3,7 +3,7 @@ import cors from 'cors';
 import express, { Router, type Express } from 'express';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
-import type { Health } from '@shopcart/contracts';
+import { configurarZodEs, type Health } from '@shopcart/contracts';
 import { authRouter } from './modules/auth/auth.routes';
 import { cartRouter } from './modules/cart/cart.routes';
 import { catalogRouter } from './modules/catalog/catalog.routes';
@@ -19,6 +19,7 @@ import { ok } from './shared/http';
 import { httpLogger } from './shared/logger';
 
 export function createApp(): Express {
+  configurarZodEs(); // mensajes de validación en español
   const app = express();
   app.disable('x-powered-by');
 

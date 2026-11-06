@@ -82,12 +82,22 @@ export function idempotencyKey(req: Request): string {
 
 // ── Rate limiting (extra del enunciado: endpoints de autenticación) ───────────
 
-export const authRateLimit: RequestHandler = rateLimit({
-  windowMs: 60_000,
-  limit: config.RATE_LIMIT_AUTH_PER_MIN,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: () => config.NODE_ENV === 'test',
-  handler: (_req, _res, next) =>
-    next(new AppError('DEMASIADAS_SOLICITUDES', 429, 'Demasiados intentos. Espera un minuto.')),
-});
+const limiter = (limit: number): RequestHandler =>
+  rateLimit({
+    windowMs: 60_000,
+    limit,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: () => config.NODE_ENV === 'test',
+    handler: (_req, _res, next) =>
+      next(new AppError('DEMASIADAS_SOLICITUDES', 429, 'Demasiados intentos. Espera un minuto.')),
+  });
+
+/** Login y registro: fuerza bruta de credenciales → límite estricto por IP. */
+export const authRateLimit: RequestHandler = limiter(config.RATE_LIMIT_AUTH_PER_MIN);
+
+/**
+ * Refresh: el frontend lo llama en cada recarga de página, no es un vector de adivinación (el
+ * token es aleatorio de 256 bits), así que tiene un límite más holgado.
+ */
+export const refreshRateLimit: RequestHandler = limiter(config.RATE_LIMIT_AUTH_PER_MIN * 6);
