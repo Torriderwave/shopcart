@@ -8,24 +8,31 @@
   "workspaces": [
     "contracts",
     "db",
-    "api"
+    "api",
+    "web"
   ],
   "scripts": {
     "dev": "npm run dev -w api",
     "db:setup": "node db/run.mjs --reset",
     "db:migrate": "node db/run.mjs",
     "test": "npm run db:setup && npm test -w api",
+    "posttest": "npm run db:setup",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "docs:postman": "npm run docs:postman -w api",
-    "docs:erd": "node db/erd.mjs"
+    "docs:erd": "node db/erd.mjs",
+    "dev:web": "npm run dev -w web",
+    "test:e2e": "npm run db:setup && npm run test:e2e -w web",
+    "posttest:e2e": "npm run db:setup"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.64.1",
     "eslint": "^9.0.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-boundaries": "^7.4.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "prettier": "^3.0.0",
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.0.0"

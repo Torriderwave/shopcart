@@ -1,0 +1,580 @@
+body {
+  background: #f3f5ef;
+  -webkit-font-smoothing: antialiased;
+}
+:root[data-mantine-color-scheme='light'] {
+  --sc-border: #dfe5da;
+}
+
+/* Tarjetas de producto */
+.producto-spot.spotlight-card {
+  padding: 0;
+  height: 100%;
+  border-radius: 20px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.producto-spot.spotlight-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 40px rgba(5, 74, 57, 0.2);
+}
+.producto-card {
+  height: 100%;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  border-radius: 0;
+}
+.producto-card .producto-img {
+  transition: transform 0.35s ease;
+}
+.producto-card:hover .producto-img {
+  transform: scale(1.06);
+}
+
+/* Héroe del catálogo */
+.hero {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.22), transparent 45%),
+    linear-gradient(120deg, #054a39 0%, #0b8f70 55%, #7ddc5a 100%);
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  right: -60px;
+  bottom: -90px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Navegación */
+.nav-link {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--mantine-color-gray-7);
+  transition: background 0.15s;
+}
+.nav-link:hover {
+  background: var(--mantine-color-brand-0);
+}
+.nav-link[aria-current='page'] {
+  background: var(--mantine-color-brand-0);
+  color: var(--mantine-color-brand-7);
+}
+
+/* Barra lateral del personal */
+.side-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  color: #a8cfc3;
+  transition: background 0.15s;
+}
+.side-link:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+.side-link[aria-current='page'] {
+  background: linear-gradient(90deg, #0b8f70, #12a784);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(11, 143, 112, 0.35);
+}
+
+/* Chips de categoría */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--sc-border);
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mantine-color-gray-8);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.chip:hover {
+  border-color: var(--mantine-color-brand-4);
+  color: var(--mantine-color-brand-7);
+}
+.chip[data-activo='true'] {
+  background: var(--mantine-color-brand-6);
+  border-color: var(--mantine-color-brand-6);
+  color: #fff;
+}
+
+/* ── Héroe oscuro con Aurora (React Bits) ───────────────────────────── */
+.hero-dark {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  min-height: 430px;
+  display: flex;
+  align-items: center;
+  background: #04201a;
+  color: #fff;
+  isolation: isolate;
+}
+.hero-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.9;
+}
+.hero-dark::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(4, 32, 26, 0) 40%, rgba(4, 32, 26, 0.78) 100%);
+  pointer-events: none;
+}
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: clamp(28px, 5vw, 64px);
+  max-width: 720px;
+}
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #c6f6d5;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+}
+.hero-title {
+  font-size: clamp(34px, 6vw, 62px);
+  line-height: 1.04;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+  flex-wrap: wrap;
+  margin: 0;
+}
+.hero-sub {
+  font-size: clamp(15px, 1.6vw, 18px);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 560px;
+}
+.hero-cta {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Marquesina */
+.marquesina {
+  margin: 0 0 28px;
+  padding: 14px 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--sc-border);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--mantine-color-brand-8);
+}
+
+.marquesina .scroller {
+  font-size: 15px;
+  line-height: 1.4;
+  font-family: inherit;
+  filter: none;
+}
+
+.hero-dark.auth-panel {
+  align-items: stretch;
+  justify-content: space-between;
+  min-height: 430px;
+}
+
+.hero-dark.auth-panel::after {
+  background: linear-gradient(180deg, rgba(4, 32, 26, 0.45) 0%, rgba(4, 32, 26, 0.8) 100%);
+}
+.auth-panel > * {
+  position: relative;
+  z-index: 2 !important;
+}
+.auth-panel > .hero-aurora {
+  position: absolute;
+  z-index: 0 !important;
+}
+
+/* Bordes con el tono de la marca en todas las tarjetas */
+.mantine-Card-root[data-with-border],
+.mantine-Paper-root[data-with-border] {
+  border-color: var(--sc-border);
+}
+
+/* Tablas de datos */
+.tabla-card {
+  background: #fff;
+  border: 1px solid var(--sc-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--mantine-shadow-xs);
+}
+.tabla-card table {
+  --table-border-color: #edf1ea;
+}
+.tabla-card thead tr {
+  background: #f1f5ee;
+}
+.tabla-card th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mantine-color-gray-7);
+  padding-block: 12px;
+}
+.tabla-card th button {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tabla-card tbody tr {
+  transition: background 0.12s;
+}
+.tabla-card tbody tr:hover {
+  background: var(--mantine-color-brand-0);
+}
+.tabla-card tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Estado vacío */
+.vacio-icono {
+  padding: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--mantine-color-brand-1) 0%, transparent 70%);
+  animation: flota 3.2s ease-in-out infinite;
+}
+@keyframes flota {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vacio-icono {
+    animation: none;
+  }
+}
+
+.linea-carrito {
+  transition:
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+.linea-carrito:hover {
+  box-shadow: var(--mantine-shadow-md);
+  border-color: var(--mantine-color-brand-3);
+}
+
+.tabla-card th {
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Barra de progreso de lectura */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 300;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, #0b8f70, #7ddc5a, #f59e0b);
+}
+.to-top {
+  box-shadow: 0 10px 24px rgba(5, 74, 57, 0.35);
+}
+
+/* Rebote del carrito al cambiar la cantidad */
+.cart-bump {
+  animation: bump 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes bump {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.28) rotate(-8deg);
+  }
+  70% {
+    transform: scale(0.94) rotate(4deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Microinteracciones: los botones «se hunden» al presionar */
+.mantine-Button-root:active:not([data-disabled]),
+.chip:active {
+  transform: translateY(1px) scale(0.98);
+}
+.mantine-Button-root {
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+.mantine-Button-root[data-variant='filled']:hover:not([data-disabled]) {
+  box-shadow: 0 8px 20px rgba(11, 143, 112, 0.3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cart-bump {
+    animation: none;
+  }
+}
+
+/* Tarjeta de producto: medios y overlay */
+.producto-media {
+  position: relative;
+  display: block;
+  text-decoration: none;
+}
+.producto-cat {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  box-shadow: var(--mantine-shadow-xs);
+}
+.producto-ver {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--mantine-color-brand-8);
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(4, 32, 26, 0.25);
+  opacity: 0;
+  transform: translate(-50%, 12px);
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+  pointer-events: none;
+}
+.producto-spot:hover .producto-ver,
+.producto-media:focus-visible .producto-ver {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+@media (hover: none) {
+  .producto-ver {
+    display: none;
+  }
+}
+
+/* Zoom de la imagen principal al pasar el mouse */
+.zoom-frame {
+  overflow: hidden;
+  border-radius: var(--mantine-radius-md);
+  cursor: zoom-in;
+}
+.zoom-frame .producto-img {
+  transition: transform 0.25s ease;
+  transform-origin: var(--zx, 50%) var(--zy, 50%);
+}
+.zoom-frame:hover .producto-img {
+  transform: scale(1.9);
+}
+@media (hover: none) {
+  .zoom-frame {
+    cursor: auto;
+  }
+  .zoom-frame:hover .producto-img {
+    transform: none;
+  }
+}
+
+/* Banner de cupón */
+.promo {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: clamp(24px, 4vw, 48px);
+  border-radius: 28px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 15% 120%, rgba(190, 242, 100, 0.35), transparent 50%),
+    radial-gradient(circle at 95% -10%, rgba(245, 158, 11, 0.4), transparent 45%), #05322a;
+}
+.promo-kicker {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #bef264;
+}
+.cupon-ticket {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 30px;
+  border: 2px dashed rgba(255, 255, 255, 0.55);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+.cupon-ticket:hover {
+  transform: rotate(-2deg) scale(1.03);
+  background: rgba(255, 255, 255, 0.16);
+}
+.cupon-etq {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.cupon-cod {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.cupon-acc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #bef264;
+}
+
+/* Beneficios */
+.beneficio.spotlight-card {
+  padding: 22px;
+  border-radius: 20px;
+  height: 100%;
+}
+.beneficio-icono {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  color: #fff;
+  background: linear-gradient(135deg, #0b8f70, #5cc93f);
+  box-shadow: 0 10px 20px rgba(11, 143, 112, 0.3);
+}
+
+/* Collage de fotos del héroe */
+.hero-collage {
+  position: absolute;
+  inset: 0 0 0 52%;
+  z-index: 2;
+  pointer-events: none;
+}
+.hero-foto {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  object-fit: cover;
+  border-radius: 22px;
+  border: 4px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45);
+  animation: foto-flota 7s ease-in-out infinite;
+}
+.hero-foto-1 {
+  top: 38px;
+  left: 8%;
+  width: 230px;
+  height: 230px;
+  transform: rotate(-6deg);
+}
+.hero-foto-2 {
+  top: 70px;
+  right: 6%;
+  transform: rotate(7deg);
+  animation-delay: -2s;
+}
+.hero-foto-3 {
+  bottom: 34px;
+  left: 22%;
+  width: 170px;
+  height: 170px;
+  transform: rotate(5deg);
+  animation-delay: -4s;
+}
+.hero-foto-4 {
+  bottom: 52px;
+  right: 12%;
+  width: 210px;
+  height: 210px;
+  transform: rotate(-4deg);
+  animation-delay: -1s;
+}
+@keyframes foto-flota {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -12px;
+  }
+}
+@media (max-width: 900px) {
+  .hero-collage {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-foto {
+    animation: none;
+  }
+}

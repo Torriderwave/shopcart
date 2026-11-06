@@ -1,9 +1,10 @@
 import js from '@eslint/js';
 import boundaries from 'eslint-plugin-boundaries';
+import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/node_modules/**', '**/dist/**'] },
+  { ignores: ['**/node_modules/**', '**/dist/**', 'web/src/components/reactbits/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -15,9 +16,23 @@ export default tseslint.config(
     },
   },
   {
+    files: ['**/*.cjs'],
+    languageOptions: { globals: { module: 'readonly' } },
+  },
+  {
     files: ['**/*.mjs'],
     languageOptions: {
       globals: { process: 'readonly', console: 'readonly', setTimeout: 'readonly' },
+    },
+  },
+
+  // ── Frontend (React) ─────────────────────────────────────────────────────────
+  {
+    files: ['web/src/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooks },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
     },
   },
 
