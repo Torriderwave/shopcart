@@ -78,8 +78,8 @@ BEGIN
     EXEC dbo.SP_Catalogo_CrearProducto @Admin, @Cat1, @NomProd, @Desc;
     SET @IDProd = (SELECT IDProducto FROM dbo.Productos WHERE Nombre = @NomProd);
 
-    DECLARE @Img1 NVARCHAR(500) = N'https://picsum.photos/seed/shopcart-' + CAST(@n AS NVARCHAR(5)) + N'/600/600';
-    DECLARE @Img2 NVARCHAR(500) = N'https://picsum.photos/seed/shopcart-' + CAST(@n AS NVARCHAR(5)) + N'b/600/600';
+    DECLARE @Img1 NVARCHAR(500) = N'/productos/' + RIGHT(N'0' + CAST(@n AS NVARCHAR(2)), 2) + N'.jpg';
+    DECLARE @Img2 NVARCHAR(500) = N'/productos/' + RIGHT(N'0' + CAST(@n AS NVARCHAR(2)), 2) + N'b.jpg';
     EXEC dbo.SP_Catalogo_GuardarImagen @Admin, @IDProd, @Img1, 0, 1;
     EXEC dbo.SP_Catalogo_GuardarImagen @Admin, @IDProd, @Img2, 1, 0;
 

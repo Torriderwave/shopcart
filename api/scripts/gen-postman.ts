@@ -83,7 +83,7 @@ const BODIES: Record<string, unknown> = {
     activo: true,
   },
   'POST /catalog/productos/:id/imagenes': {
-    url: 'https://picsum.photos/seed/demo/600/600',
+    url: '/productos/01.jpg',
     orden: 0,
     esPrincipal: true,
   },
