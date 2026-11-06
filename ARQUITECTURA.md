@@ -930,15 +930,15 @@ Definiciones RF-08:
 | Arranque de app | `POST /auth/refresh` |
 | Login / Registro | `POST /auth/login`, `POST /auth/register` |
 | Catálogo | `GET /catalog/categorias`, `GET /catalog/productos` |
-| Detalle producto (selector de variante por atributos) | `GET /catalog/productos/:id`, `POST /cart/lineas` |
-| Carrito | `GET /cart`, `PATCH/DELETE /cart/lineas/:id`, `POST/DELETE /cart/cupon` |
-| Checkout: entrada / recarga | `GET /checkout` → si 404, `POST /checkout/iniciar` |
+| Detalle producto (selector de variante por atributos) | `GET /catalog/productos/:id`, `POST /cart/items` |
+| Carrito | `GET /cart`, `PATCH/DELETE /cart/items/:id`, `POST/DELETE /cart/coupon` |
+| Checkout: entrada / recarga | `GET /checkout` → si 404, `POST /checkout` |
 | Checkout paso 1 (dirección: seleccionar o registrar) | `GET/POST /me/direcciones` |
-| Checkout paso 2 (envío y cupón) | `opcionesEnvio` de `CheckoutResumen`; `POST/DELETE /cart/cupon` + `GET /checkout` |
-| Checkout paso 3 (confirmar y pagar, cuenta regresiva) | `POST /orders`, `POST /checkout/cancelar` |
-| Mis pedidos / detalle | `GET /orders`, `GET /orders/:id`, `POST /orders/:id/cancelar` |
+| Checkout paso 2 (envío y cupón) | `opcionesEnvio` de `CheckoutResumen`; `POST/DELETE /cart/coupon` + `GET /checkout` |
+| Checkout paso 3 (confirmar y pagar, cuenta regresiva) | `POST /orders`, `DELETE /checkout` |
+| Mis pedidos / detalle | `GET /orders/mine`, `GET /orders/:id`, `POST /orders/:id/cancel` |
 | Mis direcciones | `GET/POST/PUT/DELETE /me/direcciones` |
-| Operador pedidos / detalle | `GET /orders`, `GET /orders/:id`, `POST /orders/:id/estado`, `/cancelar`, `/devoluciones` |
+| Operador pedidos / detalle | `GET /orders`, `GET /orders/:id`, `PATCH /orders/:id/status`, `POST /orders/:id/cancel`, `POST /orders/:id/returns` |
 | Operador inventario | `GET /inventory/existencias`, `POST /inventory/entradas`, `POST /inventory/ajustes` |
 | Kardex | `GET /inventory/variantes/:id/kardex` |
 | Admin categorías | `GET/POST/PUT/DELETE /catalog/categorias` |

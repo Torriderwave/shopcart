@@ -3,7 +3,8 @@
 Plataforma de ventas en línea — **Tech Challenge 360 · Grupo Pentandra** (Full Stack Middle/Senior, individual).
 Base de datos SQL Server + API Node.js/TypeScript (Express) + frontend React (Fase 2).
 
-> **Estado:** Fase 1 (base de datos y backend) completa. El frontend (`web/`) corresponde a la Fase 2.
+> **Estado:** Fase 1 (base de datos y backend) y Fase 2 (frontend `web/`) completas: 9 módulos RF-01…RF-09 de punta a punta,
+> 110 pruebas de integración de la API y 20 pruebas e2e del navegador.
 
 | Documento                          | Contenido                                                               |
 | ---------------------------------- | ----------------------------------------------------------------------- |
@@ -26,7 +27,11 @@ docker compose up -d --wait       # SQL Server 2022 Express; espera al healthche
 npm install
 npm run db:setup                  # crea la BD, todos los objetos y los datos semilla (~15 s)
 npm run dev                       # API en http://localhost:3000/api/v1
+npm run dev:web                   # (otra terminal) frontend en http://localhost:5173
 ```
+
+Abre **http://localhost:5173** e inicia sesión con las cuentas de la sección 2. El servidor de desarrollo del frontend hace proxy de
+`/api` a la API (mismo origen), de modo que la cookie `httpOnly` del refresh token funciona sin configurar CORS.
 
 Comprobación: `curl localhost:3000/api/v1/health` → `{"success":true,"data":{"status":"ok","db":"up"}}`
 
@@ -44,13 +49,14 @@ se conecta con un login propio (`shopcart_app`) que únicamente tiene `EXECUTE`*
 | `npm run db:setup`     | `DROP DATABASE` + aplica todos los scripts numerados (solo desarrollo)        |
 | `npm run db:migrate`   | Aplica solo los scripts pendientes; **falla si un script ya aplicado cambió** |
 | `npm test`             | Reconstruye la BD con el seed y corre las pruebas de la API (110 pruebas)     |
+| `npm run test:e2e`     | Reconstruye la BD y corre las pruebas e2e del navegador (Playwright, 20)      |
+| `npm run build -w web` | Build de producción del frontend (`tsc` + `vite build`)                       |
 | `npm run lint`         | ESLint (incluye reglas de dependencias entre módulos) + Prettier              |
 | `npm run typecheck`    | `tsc --noEmit` (TypeScript `strict`) en todos los workspaces                  |
 | `npm run docs:erd`     | Regenera `docs/ERD.md` desde la BD                                            |
 | `npm run docs:postman` | Regenera la colección Postman desde el documento OpenAPI                      |
 
-> Las pruebas escriben datos sobre la BD. Después de correrlas, `npm run db:setup` deja el conjunto de
-> demostración limpio (`npm test` en la raíz ya lo hace antes de probar).
+> Las pruebas escriben datos sobre la BD; `npm test` y `npm run test:e2e` la dejan limpia al terminar (si fallan, corre `npm run db:setup`).
 
 ## 2. Credenciales de prueba
 
@@ -84,7 +90,7 @@ api/src/
   shared/    config, db (único acceso a la BD), auth, errores, http
   jobs/      liberación de reservas vencidas (cada 60 s)
   openapi.ts documento OpenAPI generado desde contracts
-web/         React + Vite + Mantine (Fase 2)
+web/         React 18 + TypeScript + Vite + Mantine + TanStack Query (ver §3.2)
 ```
 
 - **Capas:** rutas (validación zod + HTTP) → servicios (reglas de negocio) → repositorios (invocan SPs). Sin lógica de
@@ -96,6 +102,42 @@ web/         React + Vite + Mantine (Fase 2)
   restricciones con prefijo `PK_/FK_/UQ_/CK_/IX_/DF_`. Sin `FLOAT`/`REAL`: todo monto es `DECIMAL(18,2)`.
 - **Errores centralizados:** los SPs lanzan `THROW` con números estables (50001…50099) que `shared/errors.ts` traduce a un
   código de error y HTTP (`400/401/403/404/409/429/500`); el cliente siempre recibe `{ success:false, error:{ code, message } }`.
+
+### 3.2 Frontend (`web/`)
+
+```
+web/src/
+  shared/    api/client.ts (fetch + refresh transparente) · auth/ (sesión, guardas por rol) · ui/ (Estados, DataTable…) · layout/
+  features/  catalog · cart · checkout · orders · staff (operador) · admin   → pantallas + hooks de datos por feature
+web/e2e/     pruebas Playwright (auth, sesión, compra completa, panel admin)
+```
+
+- **Rutas protegidas y menús por rol** (`RequireRole`): Cliente (`/checkout`, `/mis-pedidos`, `/mis-direcciones`), Operador
+  (`/operador/*`: pedidos e inventario/kardex) y Administrador (además `/admin/*`: dashboard, productos, categorías, cupones,
+  usuarios, bitácora). Un rol sin permiso es redirigido a su inicio; el backend vuelve a validar todo (403).
+- **Animaciones:** componentes de [React Bits](https://reactbits.dev) copiados a `web/src/components/reactbits/` (`node web/scripts/add-reactbits.mjs <Nombre…>`):
+  Aurora (WebGL) en el héroe y el login, BlurText, ShinyText, GradientText, ScrollVelocity, StarBorder, Magnet, AnimatedContent,
+  SpotlightCard, CountUp (KPI) y ClickSpark. Es código de terceros: va con `@ts-nocheck` y fuera de ESLint/Prettier.
+- **Diseño:** tema propio sobre Mantine (paleta bosque + lima + ámbar, Inter, tarjetas con elevación; transiciones animadas entre vistas con `motion`), portada con héroe y filtro por categorías,
+  barra lateral oscura con iconos para el personal y tablero con KPI y gráficas. Las imágenes del catálogo de demostración son
+  fotografías reales de [Pixabay](https://pixabay.com) (licencia Pixabay: uso libre, sin atribución obligatoria), recortadas a
+  900×900 y guardadas en `web/public/productos/`, servidas desde el propio sitio: no dependen de servicios externos. Las URL de imagen aceptan `http(s)://` o una ruta que empiece con `/`.
+- **Sesión:** el access token (15 min) vive **solo en memoria**; el refresh token es una cookie `httpOnly`. Ante un `401 TOKEN_EXPIRADO`
+  el cliente renueva **una sola vez** (single-flight: la rotación invalidaría dos refresh simultáneos) y reintenta la petición sin que el
+  usuario lo note. Solo un `401` del refresh cierra la sesión: un `429`, un `5xx` o una caída de red **no** sacan al usuario, se ofrece
+  «Reintentar». El refresh tiene un límite de tasa propio y más holgado que el de login/registro (se llama en cada recarga).
+- **Formularios** validados con **los mismos esquemas zod de `contracts`** que usa la API, con mensajes en español (`configurarZodEs`,
+  compartido por API y web); los errores `VALIDACION` del servidor se pintan en su campo.
+- **Tablas** con paginación, ordenamiento y filtros **del lado del servidor**; el estado de filtros vive en la URL (compartible, sobrevive
+  a recargar). Todas las vistas con datos muestran estados de **carga, vacío y error** (`Estados`).
+- **Checkout en 3 pasos** (dirección → envío y cupón → pagar) con reserva de 15 min y cuenta regresiva; al vencer ofrece reiniciar. El pago
+  envía `Idempotency-Key` (se conserva durante el intento) y un candado impide el doble clic; `TOTAL_CAMBIO`, `RESERVA_VENCIDA` y
+  `STOCK_INSUFICIENTE` muestran un aviso con la acción concreta.
+- **Carrito de invitado:** token en `localStorage` enviado como `X-Cart-Token`; al iniciar sesión o registrarse el servidor lo fusiona y el
+  invitado regresa a donde iba (`/checkout`).
+- **Dashboard** con KPIs, ventas por día/semana/mes, ventas por categoría, top 10 productos, pedidos recientes y carritos abandonados.
+- **Responsive:** `AppShell` de Mantine; en móvil el menú pasa a un panel con burger y las tablas hacen scroll horizontal.
+- Un `ErrorBoundary` global evita la pantalla en blanco ante un error de render.
 
 ### 3.1 Seguridad
 
@@ -211,23 +253,35 @@ máximo 100) con ordenamiento por lista blanca; la lógica crítica vive en la B
 | `openapi.test.ts`   | Documento OpenAPI válido y **cada ruta de Express está documentada** (y viceversa)                                                                                                                                                                                                     |
 | `shared.test.ts`    | Mapeo de errores SQL → HTTP, argon2id y JWT, `Idempotency-Key`, lista blanca de ordenamiento                                                                                                                                                                                           |
 
+### 7.1 Pruebas e2e del navegador (`npm run test:e2e`)
+
+Playwright (Chromium) contra la API y la BD reales (levanta ambas si no están corriendo; la API de pruebas relaja solo el límite de login):
+
+| Archivo            | Cubre                                                                                                                                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth.spec.ts`     | Validación de registro en español, correo duplicado, credenciales incorrectas, usuario desactivado, rutas protegidas por rol, cerrar sesión                       |
+| `session.spec.ts`  | Recarga conserva la sesión, `401 TOKEN_EXPIRADO` se renueva solo, un `429` del refresh **no** cierra la sesión                                                    |
+| `purchase.spec.ts` | Invitado → registro con fusión de carrito, dirección, cupón inválido/válido, **doble clic = un solo pedido**, operador avanza estados y devuelve, cliente cancela |
+| `admin.spec.ts`    | Dashboard y gráficas, alta de categoría/producto/variante (SKU duplicado), cupones, usuarios (desactivar), bitácora, ajuste de inventario inválido                |
+
 ## 8. Cobertura de requerimientos
 
-| RF    | Módulo                 | Dónde                                                                    |
-| ----- | ---------------------- | ------------------------------------------------------------------------ |
-| RF-01 | Autenticación y acceso | `modules/auth`, `SP_Auth_*`, `SP_Direcciones_*`                          |
-| RF-02 | Catálogo               | `modules/catalog`, `SP_Catalogo_*`, `VW_Catalogo_ProductosTienda`        |
-| RF-03 | Inventario y kardex    | `modules/inventory`, `SP_Inventario_*`                                   |
-| RF-04 | Carrito                | `modules/cart`, `SP_Carrito_*`, `FU_Carrito_CalcularTotales`             |
-| RF-05 | Cupones                | `modules/coupons`, `SP_Cupones_*`, `FU_Cupones_CalculoDescuento`         |
-| RF-06 | Checkout y pago        | `modules/orders`, `SP_Pedidos_IniciarCheckout`, `SP_Pedidos_CrearPedido` |
-| RF-07 | Pedidos y devoluciones | `modules/orders`, `SP_Pedidos_*`, `PedidoTransiciones`                   |
-| RF-08 | Dashboard y reportes   | `modules/reports`, `SP_Reportes_*`, `VW_Dashboard_*`                     |
-| RF-09 | Bitácora               | `SP_Bitacora_*`, `TR_Bitacora_No*` (triggers `INSTEAD OF`), `GET /audit` |
+| RF    | Módulo                 | Dónde                                                                                                               |
+| ----- | ---------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| RF-01 | Autenticación y acceso | `modules/auth`, `SP_Auth_*`, `SP_Direcciones_*` · web: `/login`, `/registro`, `/mis-direcciones`, `/admin/usuarios` |
+| RF-02 | Catálogo               | `modules/catalog`, `SP_Catalogo_*`, `VW_Catalogo_ProductosTienda`                                                   |
+| RF-03 | Inventario y kardex    | `modules/inventory`, `SP_Inventario_*`                                                                              |
+| RF-04 | Carrito                | `modules/cart`, `SP_Carrito_*`, `FU_Carrito_CalcularTotales`                                                        |
+| RF-05 | Cupones                | `modules/coupons`, `SP_Cupones_*`, `FU_Cupones_CalculoDescuento`                                                    |
+| RF-06 | Checkout y pago        | `modules/orders`, `SP_Pedidos_IniciarCheckout`, `SP_Pedidos_CrearPedido`                                            |
+| RF-07 | Pedidos y devoluciones | `modules/orders`, `SP_Pedidos_*`, `PedidoTransiciones`                                                              |
+| RF-08 | Dashboard y reportes   | `modules/reports`, `SP_Reportes_*`, `VW_Dashboard_*`                                                                |
+| RF-09 | Bitácora               | `SP_Bitacora_*`, `TR_Bitacora_No*` (triggers `INSTEAD OF`), `GET /audit`                                            |
 
-## 9. Limitaciones conocidas y pendiente
+## 9. Limitaciones conocidas
 
-- **Fase 2:** el frontend `web/` (React 18 + TypeScript) aún no está construido; el contrato API ↔ web ya está cerrado y
-  documentado en `/api/docs`.
+- Las imágenes de producto son URL externas (decisión 22): sin conexión se muestra un marcador de posición.
+- El token de invitado y la marca de «hubo sesión» se guardan en `localStorage` (no son secretos: el token de acceso nunca se persiste).
+- Las vigencias de cupones se capturan en hora de Guatemala (UTC−6, sin horario de verano), igual que los reportes (decisión 16).
 - Probado con **SQL Server 2022 Express** (contenedor oficial). No se probó contra 2019.
 - Los pagos son simulados (decisión 3); no hay pasarela ni correo.
