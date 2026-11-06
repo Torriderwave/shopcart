@@ -69,7 +69,17 @@ export type Variante = z.infer<typeof VarianteSchema>;
 // ── Imágenes ──────────────────────────────────────────────────────────────────
 
 export const ImagenInputSchema = z.object({
-  url: z.string().trim().url().max(500),
+  // URL absoluta (http/https) o ruta del propio sitio ("/productos/01.jpg").
+  url: z
+    .string()
+    .trim()
+    .max(500)
+    .refine(
+      (v) => /^\/(?!\/)\S*$/.test(v) || z.url({ protocol: /^https?$/ }).safeParse(v).success,
+      {
+        message: 'Debe ser una URL http(s) o una ruta que empiece con /',
+      },
+    ),
   orden: z.number().int().min(0).max(1000).default(0),
   esPrincipal: z.boolean().default(false),
 });

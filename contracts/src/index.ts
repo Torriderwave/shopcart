@@ -6,3 +6,4 @@ export * from './cart';
 export * from './coupons';
 export * from './orders';
 export * from './reports';
+export * from './zod-es';
