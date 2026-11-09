@@ -21,7 +21,7 @@ Base de datos SQL Server + API Node.js/TypeScript (Express) + frontend React (Fa
 Requisitos: **Node.js ≥ 24**, **Docker con Compose** (para SQL Server). No requiere nada más.
 
 ```bash
-git clone <repositorio> shopcart && cd shopcart
+git clone https://github.com/Torriderwave/shopcart.git && cd shopcart
 cp .env.example .env              # cambia las contraseñas si quieres (ver §1.1)
 docker compose up -d --wait       # SQL Server 2022 Express; espera al healthcheck
 npm install

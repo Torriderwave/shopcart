@@ -2,7 +2,7 @@
 
 **Reto:** Tech Challenge 360 · Grupo Pentandra · Full Stack Middle/Senior  
 **Versión:** 4.2 · 30 oct 2026 (America/Guatemala, UTC-6) — v4.1 sincronizada con la implementación de la Fase 1 (ver §0, «v4.1 → v4.2»).  
-**Alcance:** diseño de referencia. La Fase 1 (BD y API) está implementada y probada; el frontend (Fase 2) sigue pendiente. Si algo difiere entre este documento y el código, **manda el código** y la diferencia está listada abajo.  
+**Alcance:** diseño de referencia. La Fase 1 (BD y API) y la Fase 2 (frontend) están implementadas y probadas. Si algo difiere entre este documento y el código, **manda el código** y la diferencia está listada abajo.  
 **Fuente de verdad:** *Tech Challenge 360 - Reto ShopCart - Enunciado.pdf* (15 págs.). Las citas `«…»` son textuales del enunciado.
 
 ---
@@ -1077,4 +1077,4 @@ Commits pequeños y progresivos. Sin secretos en el repo.
 
 ---
 
-*ShopCart arquitectura v4.2 · 30 oct 2026 (America/Guatemala). Contrastada contra el enunciado oficial; Fase 1 implementada y probada (110 pruebas); contrato API↔FE cerrado.*
+*ShopCart arquitectura v4.2 · 30 oct 2026 (America/Guatemala). Contrastada contra el enunciado oficial; Fase 1 y Fase 2 implementadas (114 pruebas de API y 20 e2e); contrato API↔FE cerrado.*
