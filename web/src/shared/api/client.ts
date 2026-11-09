@@ -3,6 +3,7 @@ import {
   type AuthResponse,
   type ErrorCode,
   type PaginationMeta,
+  type ReporteEvento,
 } from '@shopcart/contracts';
 
 const BASE = '/api/v1';
@@ -189,7 +190,82 @@ export async function apiPaged<T>(path: string, opts: RequestOptions = {}): Prom
   return { items: body.data, meta: body.meta };
 }
 
+/** Descarga un archivo autenticado (el access token sigue solo en memoria). */
+export async function descargar(
+  path: string,
+  query: Record<string, unknown> | undefined,
+  filename: string,
+): Promise<void> {
+  const res = await send(path, { query });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function esperar(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    const t = setTimeout(resolve, ms);
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(t);
+        resolve();
+      },
+      { once: true },
+    );
+  });
+}
+
+/** Mantiene abierto el aviso del dashboard. Se detiene al abortar o si la sesión ya no sirve. */
+export async function escucharReportes(
+  onEvento: (evento: ReporteEvento) => void,
+  onConexion: (viva: boolean) => void,
+  signal: AbortSignal,
+): Promise<void> {
+  while (!signal.aborted) {
+    try {
+      const res = await send('/reports/stream', { signal });
+      onConexion(true);
+      const reader = res.body?.getReader();
+      if (!reader) throw new ApiError('RED', 'El servidor no abrió el flujo.', 0);
+      const dec = new TextDecoder();
+      let buf = '';
+      while (!signal.aborted) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const bloques = buf.split('\n\n');
+        buf = bloques.pop() ?? '';
+        for (const bloque of bloques) {
+          let nombre = 'message';
+          const datos: string[] = [];
+          for (const linea of bloque.split('\n')) {
+            if (linea.startsWith(':') || linea === '') continue;
+            if (linea.startsWith('event:')) nombre = linea.slice(6).trim();
+            else if (linea.startsWith('data:')) datos.push(linea.slice(5).trim());
+          }
+          if (nombre !== 'reportes' || datos.length === 0) continue;
+          onEvento(JSON.parse(datos.join('\n')) as ReporteEvento);
+        }
+      }
+    } catch (err) {
+      if (signal.aborted) return;
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) return;
+    } finally {
+      onConexion(false);
+    }
+    await esperar(1500, signal);
+  }
+}
+
 /** Respuesta con `data` de forma libre más `meta` de paginación (p. ej. el kardex). */
+
 export async function apiWithMeta<T>(
   path: string,
   opts: RequestOptions = {},

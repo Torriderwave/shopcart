@@ -56,6 +56,7 @@ describe('permisos', () => {
       '/reports/ventas-categoria',
       '/reports/top-productos',
       '/reports/carritos-abandonados',
+      '/reports/export',
       '/audit',
     ]) {
       expect((await get(path, cliente)).status).toBe(403);

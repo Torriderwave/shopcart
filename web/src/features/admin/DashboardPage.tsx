@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Anchor,
+  Badge,
   Card,
   Group,
   SegmentedControl,
@@ -23,7 +24,7 @@ import {
   IconShoppingBag,
   type Icon,
 } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CarritoAbandonado,
   Kpis,
@@ -32,10 +33,11 @@ import type {
   VentaCategoria,
   VentaPeriodo,
 } from '@shopcart/contracts';
-import { api, apiPaged } from '../../shared/api/client';
+import { api, apiPaged, descargar, escucharReportes } from '../../shared/api/client';
 import { fmtDate, fmtDateTime, fmtMoney, hoyGT } from '../../shared/format';
 import { Cargando, ErrorEstado, Vacio } from '../../shared/ui/Estados';
 import { EstadoBadge } from '../../shared/ui/Misc';
+import { notifyError } from '../../shared/notify';
 import { PageHeader } from '../../shared/ui/PageHeader';
 
 /** Las 7 mayores categorías y el resto agrupado: la gráfica y la leyenda siguen legibles con muchas categorías. */
@@ -138,9 +140,12 @@ function Kpi({
 }
 
 export default function DashboardPage() {
+  const qc = useQueryClient();
   const [desde, setDesde] = useState(hoyGT(-29));
   const [hasta, setHasta] = useState(hoyGT());
   const [agrup, setAgrup] = useState<Agrupacion>('dia');
+  const [enVivo, setEnVivo] = useState(false);
+  const [exportando, setExportando] = useState(false);
   const rangoInvalido = !!desde && !!hasta && desde > hasta;
   const q = rangoInvalido ? {} : { desde, hasta };
 
@@ -176,9 +181,41 @@ export default function DashboardPage() {
       }),
   });
 
+  useEffect(() => {
+    const ac = new AbortController();
+    void escucharReportes(
+      (evento) => {
+        if (evento.alcance !== 'carritos') {
+          void qc.invalidateQueries({ queryKey: ['rep', 'kpis'] });
+          void qc.invalidateQueries({ queryKey: ['rep', 'ventas'] });
+          void qc.invalidateQueries({ queryKey: ['rep', 'cat'] });
+          void qc.invalidateQueries({ queryKey: ['rep', 'top'] });
+          void qc.invalidateQueries({ queryKey: ['orders', 'admin', 'recientes'] });
+        }
+        if (evento.alcance !== 'ventas') {
+          void qc.invalidateQueries({ queryKey: ['rep', 'abandonados'] });
+        }
+      },
+      setEnVivo,
+      ac.signal,
+    );
+    return () => ac.abort();
+  }, [qc]);
+
   const aplicarPreset = (dias: number) => {
     setDesde(hoyGT(-(dias - 1)));
     setHasta(hoyGT());
+  };
+
+  const exportar = async () => {
+    setExportando(true);
+    try {
+      await descargar('/reports/export', q, `shopcart-reportes_${desde}_${hasta}.xlsx`);
+    } catch (error) {
+      notifyError(error, 'No se pudo exportar');
+    } finally {
+      setExportando(false);
+    }
   };
 
   const etiquetaPeriodo = (p: string) =>
@@ -189,6 +226,21 @@ export default function DashboardPage() {
       <PageHeader
         titulo="Dashboard"
         descripcion="Solo pedidos pagados, sin cancelados y descontando devoluciones. Fechas en hora de Guatemala."
+        acciones={
+          <Group gap="sm">
+            <Badge variant="light" color={enVivo ? 'brand' : 'gray'}>
+              {enVivo ? 'En vivo' : 'Reconectando'}
+            </Badge>
+            <Button
+              variant="light"
+              loading={exportando}
+              disabled={rangoInvalido}
+              onClick={() => void exportar()}
+            >
+              Exportar Excel
+            </Button>
+          </Group>
+        }
       />
       <Card withBorder padding="md" mb="lg">
         <Group align="flex-end" wrap="wrap">

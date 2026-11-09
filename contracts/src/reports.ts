@@ -95,6 +95,13 @@ export const ListarBitacoraQuerySchema = PaginationQuerySchema.extend({
 });
 export type ListarBitacoraQuery = z.infer<typeof ListarBitacoraQuerySchema>;
 
+/** Qué reportes quedaron obsoletos. `todo` limpia ventas y carritos. */
+export const ALCANCES_REPORTE = ['ventas', 'carritos', 'todo'] as const;
+export const ReporteEventoSchema = z.object({
+  alcance: z.enum(ALCANCES_REPORTE),
+});
+export type ReporteEvento = z.infer<typeof ReporteEventoSchema>;
+
 export const EntradaBitacoraSchema = z.object({
   idBitacora: z.number().int(),
   fecha: z.string(),

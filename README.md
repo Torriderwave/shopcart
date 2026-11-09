@@ -4,7 +4,7 @@ Plataforma de ventas en línea — **Tech Challenge 360 · Grupo Pentandra** (Fu
 Base de datos SQL Server + API Node.js/TypeScript (Express) + frontend React (Fase 2).
 
 > **Estado:** Fase 1 (base de datos y backend) y Fase 2 (frontend `web/`) completas: 9 módulos RF-01…RF-09 de punta a punta,
-> 110 pruebas de integración de la API y 20 pruebas e2e del navegador.
+> 114 pruebas de integración de la API y 20 pruebas e2e del navegador.
 
 | Documento                          | Contenido                                                               |
 | ---------------------------------- | ----------------------------------------------------------------------- |
@@ -12,7 +12,7 @@ Base de datos SQL Server + API Node.js/TypeScript (Express) + frontend React (Fa
 | [docs/ERD.md](docs/ERD.md)         | **Diagrama entidad-relación** (generado desde el esquema real de la BD) |
 | [ARQUITECTURA.md](ARQUITECTURA.md) | Diseño detallado: tablas, SPs, flujos, contrato API y plan              |
 | `http://localhost:3000/api/docs`   | OpenAPI / Swagger UI (también `/api/openapi.json`)                      |
-| [docs/postman/](docs/postman)      | Colección Postman (60 requests) y entorno                               |
+| [docs/postman/](docs/postman)      | Colección Postman (62 requests) y entorno                               |
 
 ---
 
@@ -48,7 +48,7 @@ se conecta con un login propio (`shopcart_app`) que únicamente tiene `EXECUTE`*
 | ---------------------- | ----------------------------------------------------------------------------- |
 | `npm run db:setup`     | `DROP DATABASE` + aplica todos los scripts numerados (solo desarrollo)        |
 | `npm run db:migrate`   | Aplica solo los scripts pendientes; **falla si un script ya aplicado cambió** |
-| `npm test`             | Reconstruye la BD con el seed y corre las pruebas de la API (110 pruebas)     |
+| `npm test`             | Reconstruye la BD con el seed y corre las pruebas de la API (114 pruebas)     |
 | `npm run test:e2e`     | Reconstruye la BD y corre las pruebas e2e del navegador (Playwright, 20)      |
 | `npm run build -w web` | Build de producción del frontend (`tsc` + `vite build`)                       |
 | `npm run lint`         | ESLint (incluye reglas de dependencias entre módulos) + Prettier              |
@@ -239,7 +239,7 @@ máximo 100) con ordenamiento por lista blanca; la lógica crítica vive en la B
 
 ## 7. Pruebas
 
-`npm test` (raíz) reconstruye la BD con el seed y ejecuta **110 pruebas de integración** contra la API y la BD reales
+`npm test` (raíz) reconstruye la BD con el seed y ejecuta **114 pruebas de integración** contra la API y la BD reales
 (sin mocks de base de datos):
 
 | Archivo             | Cubre                                                                                                                                                                                                                                                                                  |
@@ -278,7 +278,18 @@ Playwright (Chromium) contra la API y la BD reales (levanta ambas si no están c
 | RF-08 | Dashboard y reportes   | `modules/reports`, `SP_Reportes_*`, `VW_Dashboard_*`                                                                |
 | RF-09 | Bitácora               | `SP_Bitacora_*`, `TR_Bitacora_No*` (triggers `INSTEAD OF`), `GET /audit`                                            |
 
-## 9. Limitaciones conocidas
+## 9. Extras del enunciado
+
+Los cuatro extras opcionales están implementados. No sustituyen a ningún RF.
+
+| Extra                               | Cómo                                                                                                                                                                                                                                                                                                       |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Límite de intentos en autenticación | 10 peticiones/min por IP en registro y login; el refresh tiene un cupo aparte, más holgado, porque cada recarga lo llama                                                                                                                                                                                   |
+| Caché de reportes                   | Memoria de la API, 5 min, solo ventas (KPIs, periodo, categoría y top). Crear, cancelar o devolver un pedido la borra al instante; una lectura en curso cuando llega la invalidación no se guarda. Los carritos abandonados no se cachean: entran al reporte por el reloj, sin una escritura que invalidar |
+| Dashboard en vivo                   | `GET /reports/stream` (SSE, solo administrador). El navegador lo abre con el access token y, al recibir `reportes`, vuelve a pedir los paneles afectados                                                                                                                                                   |
+| Exportación                         | `GET /reports/export` descarga un Excel del mismo rango del dashboard: KPIs, ventas por día/semana/mes, categorías, top 10 y todos los carritos abandonados                                                                                                                                                |
+
+## 10. Limitaciones conocidas
 
 - Las imágenes de producto son URL externas (decisión 22): sin conexión se muestra un marcador de posición.
 - El token de invitado y la marca de «hubo sesión» se guardan en `localStorage` (no son secretos: el token de acceso nunca se persiste).

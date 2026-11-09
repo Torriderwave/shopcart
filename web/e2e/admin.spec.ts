@@ -9,7 +9,11 @@ test.describe('Panel de administración (RF-02, RF-03, RF-05, RF-08, RF-09)', ()
   test('dashboard: KPIs, gráficas y rango de fechas inválido', async ({ page }) => {
     await page.goto('/admin/dashboard');
     await expect(page.getByText('Ventas netas').first()).toBeVisible();
+    await expect(page.getByText('En vivo')).toBeVisible();
     await expect(page.getByText('Ventas en el tiempo')).toBeVisible();
+    const descarga = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Exportar Excel' }).click();
+    expect((await descarga).suggestedFilename()).toContain('shopcart-reportes');
     await expect(page.locator('.recharts-surface').first()).toBeVisible();
     await page.getByRole('button', { name: '6 meses' }).click();
     await page.getByText('Por semana').click();

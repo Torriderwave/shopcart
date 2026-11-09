@@ -85,6 +85,8 @@ interface Endpoint {
   list?: boolean; // data es un arreglo
   paged?: boolean; // arreglo con meta de paginación
   status?: 200 | 201 | 204;
+  /** Respuesta que no usa el envelope JSON. */
+  formato?: 'xlsx' | 'event-stream';
   cartToken?: boolean;
   idempotency?: boolean;
   errors?: string[]; // códigos de error típicos del endpoint
@@ -711,6 +713,23 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     m: 'get',
+    p: '/reports/export',
+    tag: 'Reportes',
+    sum: 'Exportar los reportes del rango a Excel',
+    access: 'admin',
+    query: RangoQuerySchema,
+    formato: 'xlsx',
+  },
+  {
+    m: 'get',
+    p: '/reports/stream',
+    tag: 'Reportes',
+    sum: 'Avisos en vivo cuando cambian ventas o carritos abandonados',
+    access: 'admin',
+    formato: 'event-stream',
+  },
+  {
+    m: 'get',
     p: '/audit',
     tag: 'Bitácora',
     sum: 'Bitácora inmutable con valor anterior y nuevo',
@@ -796,6 +815,22 @@ export function buildOpenApi(): Json {
     const responses: Record<string, Json> = {};
     if (status === 204) {
       responses['204'] = { description: 'Sin contenido' };
+    } else if (e.formato === 'xlsx') {
+      responses['200'] = {
+        description:
+          'Libro de Excel con KPIs, ventas, categorías, top de productos y carritos abandonados.',
+        content: {
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+            schema: { type: 'string', format: 'binary' },
+          },
+        },
+      };
+    } else if (e.formato === 'event-stream') {
+      responses['200'] = {
+        description:
+          'Flujo SSE. Evento `listo` al conectar y `reportes` al invalidar. data: { alcance: ventas | carritos | todo }.',
+        content: { 'text/event-stream': { schema: { type: 'string' } } },
+      };
     } else {
       responses[String(status)] = {
         description: 'Correcto',

@@ -75,6 +75,15 @@ function camelRow(row: Record<string, unknown>): Row {
 const MAX_DEADLOCK_RETRIES = 2;
 
 /**
+ * Aviso después de un SP exitoso. Lo usa el módulo de reportes para soltar su caché.
+ * El resto de módulos no se entera: todos pasan por aquí.
+ */
+const avisosSp: ((nombre: string) => void)[] = [];
+export function alEjecutarSp(fn: (nombre: string) => void): void {
+  avisosSp.push(fn);
+}
+
+/**
  * Ejecuta `SP_Modulo_Proceso`. Los parámetros se pasan por nombre (sin `@`).
  * Los recordsets se devuelven con claves en camelCase. Ante un deadlock (1205) la transacción
  * ya hizo rollback, así que se reintenta hasta 2 veces; los demás errores se traducen a AppError.
@@ -88,6 +97,7 @@ export async function executeSp(name: string, params: SpParams = {}): Promise<Sp
         request.input(key, type as sql.ISqlType, value);
       }
       const result = await request.execute(name);
+      for (const fn of avisosSp) fn(name);
       return {
         recordsets: (result.recordsets as unknown as Record<string, unknown>[][]).map((rs) =>
           rs.map(camelRow),
