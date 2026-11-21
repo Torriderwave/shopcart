@@ -4,3 +4,5 @@ ARQUITECTURA.md
 package-lock.json
 *.sql
 web/src/components/reactbits
+dist-demo
+web/src/demo/generated

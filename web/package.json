@@ -8,7 +8,10 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc --noEmit -p e2e",
-    "test:e2e": "playwright test -c e2e/playwright.config.ts"
+    "test:e2e": "playwright test -c e2e/playwright.config.ts",
+    "gen:demo": "tsx scripts/gen-demo-mocks.mts",
+    "check:demo": "npm run gen:demo && tsx scripts/check-demo-mocks.mts",
+    "build:demo": "npm run gen:demo && tsc --noEmit && vite build -c vite.config.demo.ts --mode demo"
   },
   "devDependencies": {
     "@types/react": "^18.3.31",
