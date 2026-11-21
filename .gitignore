@@ -5,3 +5,4 @@ dist/
 .DS_Store
 web/test-results/
 web/playwright-report/
+dist-demo/

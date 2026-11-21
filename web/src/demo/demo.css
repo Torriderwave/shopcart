@@ -1,0 +1,20 @@
+/* Banner de la demo: fijo abajo, siempre visible. */
+.demo-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  background: #0a2620;
+  border-top: 2px solid #7ddc5a;
+  color: #fff;
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.18);
+}
+body {
+  padding-bottom: var(--demo-banner-h, 56px);
+}
+/* Botón "volver arriba" y avisos quedan por encima del banner. */
+.mantine-Affix-root {
+  bottom: calc(var(--demo-banner-h, 56px) + 16px) !important;
+}
